@@ -1,0 +1,40 @@
+@use "colors"
+
+$gap: 0.5rem
+
+body
+    min-height: 100vh
+    max-height: 100vh
+
+    display: grid
+
+    margin: 0
+    padding: $gap
+    gap: $gap
+
+    grid-template-columns: auto 1fr
+    grid-template-rows: 1fr auto
+
+    grid-template-areas: "sidebar main" "nav nav"
+
+    > *
+        background-color: colors.$mantle
+
+        padding: 1em
+
+        border: 0.15em solid colors.$surface0
+        border-radius: 0.5em
+
+#sidebar
+    grid-area: sidebar
+
+#main
+    grid-area: main
+
+#nav
+    grid-area: nav
+
+    display: flex
+    flex-direction: row
+    align-items: center
+    justify-content: center
