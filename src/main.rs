@@ -2,7 +2,7 @@ use askama::Template;
 use axum::{
     Router,
     http::StatusCode,
-    response::{Html, Response},
+    response::{Html, IntoResponse, Response},
     routing::get,
 };
 use log::info;
@@ -33,25 +33,35 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
     Ok(Html(Index {}.render()?))
 }
 
-async fn table_handler() -> Html<String> {
-    let mut table = "<table>".to_string();
+// -- Table -- //
 
-    table.push_str("<tr><th>Title</th><th>Album</th><th>Author</th></tr>");
-    for i in 0..100 {
-        table += format!(
-            "<tr><td>{title}</td><td>{album}</td><td>{author}</td></tr>",
-            title = i,
-            album = i,
-            author = i
-        )
-        .as_str();
-    }
-    table.push_str("</table>");
-
-    Html(table)
+#[derive(Template)]
+#[template(path = "table.html")]
+struct Table<'a> {
+    songs: Vec<Song<'a>>,
 }
 
-use axum::response::IntoResponse;
+struct Song<'a> {
+    title: &'a str,
+    album: &'a str,
+    author: &'a str,
+}
+
+async fn table_handler() -> Result<impl IntoResponse, AppError> {
+    let mut table = Table { songs: vec![] };
+
+    for _ in 0..100 {
+        table.songs.push(Song {
+            title: "Hello",
+            album: "World",
+            author: "Bob",
+        });
+    }
+
+    Ok(Html(table.render()?))
+}
+
+// -- Errors -- //
 
 #[derive(Debug, displaydoc::Display, thiserror::Error)]
 enum AppError {

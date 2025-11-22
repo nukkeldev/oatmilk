@@ -6,6 +6,8 @@
 
 {% block content %}
 <div id="sidebar">Sidebar</div>
-<main id="main">Main</main>
+<main id="main">
+    <table hx-trigger="load" hx-get="/table"></table>
+</main>
 <nav id="nav">Nav</nav>
 {% endblock %}
