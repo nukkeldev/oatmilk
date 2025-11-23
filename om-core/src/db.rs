@@ -2,7 +2,7 @@
 
 use sqlx::{Pool, sqlite::*};
 
-use crate::media::{NewSong, Song};
+use crate::media::Song;
 
 #[derive(Debug)]
 pub struct Db {
@@ -10,8 +10,12 @@ pub struct Db {
 }
 
 impl Db {
-    pub async fn pool<'a>(options: SqlitePoolOptions, url: &'a str) -> Result<Db, sqlx::Error> {
-        let pool = options.connect(url).await?;
+    pub async fn new_in_memory() -> Result<Db, sqlx::Error> {
+        Self::new_at_url("sqlite::memory:").await
+    }
+
+    pub async fn new_at_url<'a>(url: &'a str) -> Result<Db, sqlx::Error> {
+        let pool = SqlitePoolOptions::new().connect(url).await?;
         Ok(Db { pool })
     }
 
@@ -23,15 +27,21 @@ impl Db {
         Ok(())
     }
 
-    pub async fn add_song(&mut self, song: NewSong) -> Result<i64, sqlx::Error> {
-        let id = sqlx::query!(
+    pub async fn add_song(&mut self, song: Song) -> Result<i64, sqlx::Error> {
+        let id = sqlx::query(
             r#"
-            INSERT INTO Songs (title, album, author) VALUES (?, ?, ?)
+            INSERT INTO Songs 
+                (title, parent_type, parent_id, author, duration, description) 
+            VALUES (?, ?, ?, ?, ?, ?)
         "#,
-            song.title,
-            song.album,
-            song.author,
         )
+        .bind(song.title)
+        .bind(song.parent.r#type as i64)
+        .bind(song.parent.id)
+        .bind(song.author)
+        .bind(song.duration)
+        // .bind(song.tags)
+        .bind(song.description)
         .execute(&self.pool)
         .await?
         .last_insert_rowid();
@@ -40,11 +50,10 @@ impl Db {
     }
 
     pub async fn get_songs(&mut self) -> Result<Vec<Song>, sqlx::Error> {
-        sqlx::query_as!(
-            Song,
+        sqlx::query_as::<_, Song>(
             r#"
             SELECT * FROM Songs;
-        "#
+        "#,
         )
         .fetch_all(&self.pool)
         .await
@@ -53,29 +62,17 @@ impl Db {
 
 #[cfg(test)]
 mod tests {
-    use sqlx::sqlite::SqlitePoolOptions;
-
-    use crate::{db::Db, media::NewSong};
-
-    #[tokio::test]
-    async fn connect_to_db() {
-        _ = Db::pool(SqlitePoolOptions::new(), "sqlite::memory:")
-            .await
-            .unwrap();
-    }
+    use crate::{db::Db, media::Song};
 
     #[tokio::test]
     async fn use_db() {
-        let mut db = Db::pool(SqlitePoolOptions::new(), "sqlite::memory:")
-            .await
-            .unwrap();
+        let mut db = Db::new_in_memory().await.unwrap();
         db.try_setup().await.unwrap();
 
         let id = db
-            .add_song(NewSong {
+            .add_song(Song {
                 title: "".to_string(),
-                album: None,
-                author: None,
+                ..Default::default()
             })
             .await
             .unwrap();

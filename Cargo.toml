@@ -5,6 +5,8 @@ members = ["om-core", "om-web"]
 [workspace.dependencies]
 log = "0.4.28"
 tokio = { version = "1.48.0", features = ["full"] }
+thiserror = "2.0.17"
+displaydoc = "0.2.5"
 
 [profile.dev.package.sqlx-macros]
 opt-level = 3

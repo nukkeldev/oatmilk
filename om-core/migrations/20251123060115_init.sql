@@ -1,7 +1,10 @@
--- Add migration script here
 CREATE TABLE IF NOT EXISTS Songs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
-    album INTEGER,
-    author INTEGER
+    parent_type INTEGER NOT NULL DEFAULT 0,
+    parent_id INTEGER,
+    author INTEGER NOT NULL DEFAULT -1,
+    duration FLOAT,
+    tags JSON DEFAULT "[]",
+    description TEXT
 );

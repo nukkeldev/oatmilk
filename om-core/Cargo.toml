@@ -6,3 +6,7 @@ edition = "2024"
 [dependencies]
 sqlx = { version = "0.8.6", features = ["sqlite", "runtime-tokio"] }
 tokio.workspace = true
+log.workspace = true
+displaydoc.workspace = true
+thiserror.workspace = true
+num_enum = "0.7.5"
