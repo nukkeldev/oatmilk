@@ -4,3 +4,15 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+log.workspace = true
+tokio.workspace = true
+
+om-core = { path = "../om-core" }
+
+askama = "0.14.0"
+axum = "0.8.7"
+pretty_env_logger = "0.5.0"
+tower = { version = "0.5.2", features = ["util"] }
+tower-http = { version = "0.6.6", features = ["fs"] }
+thiserror = "2.0.17"
+displaydoc = "0.2.5"

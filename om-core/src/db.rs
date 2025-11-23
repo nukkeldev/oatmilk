@@ -58,14 +58,14 @@ mod tests {
     use crate::{db::Db, media::NewSong};
 
     #[tokio::test]
-    async fn connect_to_in_memory() {
+    async fn connect_to_db() {
         _ = Db::pool(SqlitePoolOptions::new(), "sqlite::memory:")
             .await
             .unwrap();
     }
 
     #[tokio::test]
-    async fn use_in_memory() {
+    async fn use_db() {
         let mut db = Db::pool(SqlitePoolOptions::new(), "sqlite::memory:")
             .await
             .unwrap();
