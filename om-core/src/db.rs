@@ -2,7 +2,7 @@
 
 use sqlx::{Pool, sqlite::*};
 
-use crate::media::Song;
+use crate::media::*;
 
 #[derive(Debug)]
 pub struct Db {
@@ -27,32 +27,29 @@ impl Db {
         Ok(())
     }
 
-    pub async fn add_song(&mut self, song: Song) -> Result<i64, sqlx::Error> {
-        let id = sqlx::query(
-            r#"
-            INSERT INTO Songs 
-                (title, parent_type, parent_id, author, duration, description) 
-            VALUES (?, ?, ?, ?, ?, ?)
-        "#,
-        )
-        .bind(song.title)
-        .bind(song.parent.r#type as i64)
-        .bind(song.parent.id)
-        .bind(song.author)
-        .bind(song.duration)
-        // .bind(song.tags)
-        .bind(song.description)
-        .execute(&self.pool)
-        .await?
-        .last_insert_rowid();
-
+    pub async fn add<T: Insertable<Sqlite>>(&mut self, entity: T) -> Result<i64, sqlx::Error> {
+        let id = entity
+            .insert()
+            .execute(&self.pool)
+            .await?
+            .last_insert_rowid();
         Ok(id)
     }
 
     pub async fn get_songs(&mut self) -> Result<Vec<Song>, sqlx::Error> {
         sqlx::query_as::<_, Song>(
             r#"
-            SELECT * FROM Songs;
+            SELECT * FROM songs;
+        "#,
+        )
+        .fetch_all(&self.pool)
+        .await
+    }
+
+    pub async fn get_artists(&mut self) -> Result<Vec<Artist>, sqlx::Error> {
+        sqlx::query_as::<_, Artist>(
+            r#"
+            SELECT * FROM artists;
         "#,
         )
         .fetch_all(&self.pool)
@@ -62,24 +59,35 @@ impl Db {
 
 #[cfg(test)]
 mod tests {
-    use crate::{db::Db, media::Song};
+    use crate::{db::Db, media::*};
 
     #[tokio::test]
     async fn use_db() {
         let mut db = Db::new_in_memory().await.unwrap();
         db.try_setup().await.unwrap();
 
-        let id = db
-            .add_song(Song {
-                title: "".to_string(),
+        let artist = db
+            .add(Artist {
+                name: "Aquilus".to_string(),
+                description: Some("Solo Orchestral Atmospheric Black Metal Project".to_string()),
+                location: Some("Australia".to_string()),
+                ..Default::default()
+            })
+            .await
+            .unwrap() as u32;
+
+        let song = db
+            .add(Song {
+                title: "Nihil".to_string(),
+                artist: artist,
                 ..Default::default()
             })
             .await
             .unwrap();
 
-        println!("Added song with ID#{}", id);
-
         let songs = db.get_songs().await.unwrap();
         println!("Current songs: {:?}", songs);
+        let artists = db.get_artists().await.unwrap();
+        println!("Current artists: {:?}", artists);
     }
 }

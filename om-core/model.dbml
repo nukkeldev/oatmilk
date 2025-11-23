@@ -1,0 +1,89 @@
+// Compiled with: https://github.com/dvanderweele/DBML_SQLite
+// See `src/media.rs` for documentation.
+
+Table songs {
+  id integer [pk, increment, not null]
+
+  title text [not null]
+  collection integer [null, ref: > collections.id]
+  artist integer [ref: > artists.id]
+
+  cover_of integer [null, ref: > songs.id]
+
+  released integer [null]
+
+  duration float [null]
+  description text [null]
+
+  rating float [null]
+  review text [null]
+}
+
+Table collections {
+  id integer [pk, increment, not null]
+
+  title text [not null]
+  description text [null]
+
+  released integer [null]
+
+  artist integer [not null, ref: > artists.id]
+}
+
+Table artists {
+  id integer [pk, increment, not null]
+
+  name text [not null]
+  description text [null]
+
+  location text [null]
+
+  year_founded integer [null]
+  year_ended integer [null]
+}
+
+Table person_to_artist {
+  person_id integer [not null, ref: > people.id]
+  artist_id integer [not null, ref: > artists.id]
+
+  time_start integer [null]
+  time_end integer [null]
+
+  role text [null]
+}
+
+Table people {
+  id integer [pk, increment, not null]
+
+  name text [not null]
+  description text [null]
+
+  birth integer [null]
+  birthplace text [null]
+
+  death integer [null]
+  deathplace text [null]
+}
+
+Table song_to_tag {
+  song_id integer [not null, ref: > songs.id]
+  tag_id integer [not null, ref: > tags.id]
+}
+
+Table artist_to_tag {
+  artist_id integer [not null, ref: > artists.id]
+  tag_id integer [not null, ref: > tags.id]
+}
+
+Table tag_to_parent_tag {
+  tag_id integer [unique, not null, ref: > tags.id]
+  parent_id integer [not null, ref: > tags.id]
+}
+
+// TODO: Should the same tags be able to apply to both songs and artists?
+Table tags {
+  id integer [pk, increment, not null]
+
+  name text [unique, not null]
+  description text [null]
+}
