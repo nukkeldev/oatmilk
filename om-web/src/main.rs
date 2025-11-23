@@ -54,7 +54,7 @@ async fn table_handler() -> Result<impl IntoResponse, AppError> {
         table.songs.push(Song {
             title: "Hello",
             album: "World",
-            author: "Bob",
+            author: "John",
         });
     }
 
