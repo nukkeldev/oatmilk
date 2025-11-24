@@ -1,4 +1,4 @@
-CREATE TABLE songs (
+CREATE TABLE IF NOT EXISTS songs (
   id INTEGER PRIMARY KEY NOT NULL,
   title TEXT NOT NULL,
   collection INTEGER,
@@ -13,7 +13,7 @@ CREATE TABLE songs (
   FOREIGN KEY(artist) REFERENCES artists(id),
   FOREIGN KEY(cover_of) REFERENCES songs(id)
 );
-CREATE TABLE collections (
+CREATE TABLE IF NOT EXISTS collections (
   id INTEGER PRIMARY KEY NOT NULL,
   title TEXT NOT NULL,
   description TEXT,
@@ -21,7 +21,7 @@ CREATE TABLE collections (
   artist INTEGER NOT NULL,
   FOREIGN KEY(artist) REFERENCES artists(id)
 );
-CREATE TABLE artists (
+CREATE TABLE IF NOT EXISTS artists (
   id INTEGER PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
@@ -29,7 +29,7 @@ CREATE TABLE artists (
   year_founded INTEGER,
   year_ended INTEGER
 );
-CREATE TABLE person_to_artist (
+CREATE TABLE IF NOT EXISTS persons_to_artists (
   person_id INTEGER NOT NULL,
   artist_id INTEGER NOT NULL,
   time_start INTEGER,
@@ -38,7 +38,7 @@ CREATE TABLE person_to_artist (
   FOREIGN KEY(person_id) REFERENCES people(id),
   FOREIGN KEY(artist_id) REFERENCES artists(id)
 );
-CREATE TABLE people (
+CREATE TABLE IF NOT EXISTS people (
   id INTEGER PRIMARY KEY NOT NULL,
   name TEXT NOT NULL,
   description TEXT,
@@ -47,25 +47,25 @@ CREATE TABLE people (
   death INTEGER,
   deathplace TEXT
 );
-CREATE TABLE song_to_tag (
+CREATE TABLE IF NOT EXISTS songs_to_tags (
   song_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
   FOREIGN KEY(song_id) REFERENCES songs(id),
   FOREIGN KEY(tag_id) REFERENCES tags(id)
 );
-CREATE TABLE artist_to_tag (
+CREATE TABLE IF NOT EXISTS artists_to_tags (
   artist_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
   FOREIGN KEY(artist_id) REFERENCES artists(id),
   FOREIGN KEY(tag_id) REFERENCES tags(id)
 );
-CREATE TABLE tag_to_parent_tag (
+CREATE TABLE IF NOT EXISTS tags_to_parent_tags (
   tag_id INTEGER NOT NULL UNIQUE,
   parent_id INTEGER NOT NULL,
   FOREIGN KEY(tag_id) REFERENCES tags(id),
   FOREIGN KEY(parent_id) REFERENCES tags(id)
 );
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY NOT NULL,
   name TEXT NOT NULL UNIQUE,
   description TEXT

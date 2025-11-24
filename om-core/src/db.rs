@@ -1,6 +1,6 @@
 //! This module facilitates interactions with the underlying SQLite database.
 
-use sqlx::{Pool, sqlite::*};
+use sqlx::{Pool, migrate::MigrateDatabase, sqlite::*};
 
 use crate::media::*;
 
@@ -15,6 +15,10 @@ impl Db {
     }
 
     pub async fn new_at_url<'a>(url: &'a str) -> Result<Db, sqlx::Error> {
+        if !Sqlite::database_exists(url).await.unwrap() {
+            Sqlite::create_database(url).await.unwrap();
+        }
+
         let pool = SqlitePoolOptions::new().connect(url).await?;
         Ok(Db { pool })
     }
@@ -25,6 +29,10 @@ impl Db {
             .await?;
 
         Ok(())
+    }
+
+    pub async fn disconnect(&mut self) {
+        self.pool.close().await
     }
 
     pub async fn add<T: Insertable<Sqlite>>(&mut self, entity: T) -> Result<i64, sqlx::Error> {
@@ -59,10 +67,12 @@ impl Db {
 
 #[cfg(test)]
 mod tests {
+    use std::path::Path;
+
     use crate::{db::Db, media::*};
 
     #[tokio::test]
-    async fn use_db() {
+    async fn use_memory_db() {
         let mut db = Db::new_in_memory().await.unwrap();
         db.try_setup().await.unwrap();
 
@@ -89,5 +99,43 @@ mod tests {
         println!("Current songs: {:?}", songs);
         let artists = db.get_artists().await.unwrap();
         println!("Current artists: {:?}", artists);
+
+        db.disconnect().await;
+    }
+
+    #[tokio::test]
+    async fn use_file_db() {
+        let mut db = Db::new_at_url("sqlite:test.db").await.unwrap();
+        db.try_setup().await.unwrap();
+
+        let artist = db
+            .add(Artist {
+                name: "Aquilus".to_string(),
+                description: Some("Solo Orchestral Atmospheric Black Metal Project".to_string()),
+                location: Some("Australia".to_string()),
+                ..Default::default()
+            })
+            .await
+            .unwrap() as u32;
+
+        let song = db
+            .add(Song {
+                title: "Nihil".to_string(),
+                artist: artist,
+                ..Default::default()
+            })
+            .await
+            .unwrap();
+
+        let songs = db.get_songs().await.unwrap();
+        println!("Current songs: {:?}", songs);
+        let artists = db.get_artists().await.unwrap();
+        println!("Current artists: {:?}", artists);
+
+        db.disconnect().await;
+
+        // std::fs::remove_file(Path::new("test.db")).unwrap();
+        // std::fs::remove_file(Path::new("test.db-wal")).unwrap();
+        // std::fs::remove_file(Path::new("test.db-shm")).unwrap();
     }
 }

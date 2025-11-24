@@ -42,7 +42,7 @@ Table artists {
   year_ended integer [null]
 }
 
-Table person_to_artist {
+Table persons_to_artists {
   person_id integer [not null, ref: > people.id]
   artist_id integer [not null, ref: > artists.id]
 
@@ -65,17 +65,17 @@ Table people {
   deathplace text [null]
 }
 
-Table song_to_tag {
+Table songs_to_tags {
   song_id integer [not null, ref: > songs.id]
   tag_id integer [not null, ref: > tags.id]
 }
 
-Table artist_to_tag {
+Table artists_to_tags {
   artist_id integer [not null, ref: > artists.id]
   tag_id integer [not null, ref: > tags.id]
 }
 
-Table tag_to_parent_tag {
+Table tags_to_parent_tags {
   tag_id integer [unique, not null, ref: > tags.id]
   parent_id integer [not null, ref: > tags.id]
 }

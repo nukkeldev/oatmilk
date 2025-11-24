@@ -190,10 +190,41 @@ pub struct PersonToArtist {
     pub role: Option<String>,
 }
 
+impl Insertable<Sqlite> for PersonToArtist {
+    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
+        sqlx::query(
+            r#"
+            INSERT INTO persons_to_artists
+                (person_id, artist_id, time_start, time_end, role)
+            VALUES ($1, $2, $3, $4, $5)
+        "#,
+        )
+        .bind(self.person_id)
+        .bind(self.artist_id)
+        .bind(self.time_start)
+        .bind(self.time_end)
+        .bind(self.role)
+    }
+}
+
 #[derive(Debug, Default, sqlx::FromRow)]
 pub struct SongToTag {
     pub song_id: ID,
     pub tag_id: ID,
+}
+
+impl Insertable<Sqlite> for SongToTag {
+    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
+        sqlx::query(
+            r#"
+            INSERT INTO songs_to_tags
+                (song_id, tag_id)
+            VALUES ($1, $2)
+        "#,
+        )
+        .bind(self.song_id)
+        .bind(self.tag_id)
+    }
 }
 
 #[derive(Debug, Default, sqlx::FromRow)]
@@ -202,8 +233,36 @@ pub struct ArtistToTag {
     pub tag_id: ID,
 }
 
+impl Insertable<Sqlite> for ArtistToTag {
+    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
+        sqlx::query(
+            r#"
+            INSERT INTO songs_to_tags
+                (artist_id, tag_id)
+            VALUES ($1, $2)
+        "#,
+        )
+        .bind(self.artist_id)
+        .bind(self.tag_id)
+    }
+}
+
 #[derive(Debug, Default, sqlx::FromRow)]
 pub struct TagToParentTag {
     pub tag_id: ID,
     pub parent_id: ID,
+}
+
+impl Insertable<Sqlite> for TagToParentTag {
+    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
+        sqlx::query(
+            r#"
+            INSERT INTO tags_to_parent_tags
+                (tag_id, parent_id)
+            VALUES ($1, $2)
+        "#,
+        )
+        .bind(self.tag_id)
+        .bind(self.parent_id)
+    }
 }
