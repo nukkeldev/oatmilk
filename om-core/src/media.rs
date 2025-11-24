@@ -6,19 +6,31 @@
 //! Unforunately, that means we can only store 4 billion structures of each type.
 
 use chrono::{DateTime, Utc};
-use sqlx::{Database, Sqlite, query::Query};
+use om_core_proc::SQLiteCompat;
+use sqlx::{
+    FromRow, Sqlite,
+    query::{Query, QueryAs},
+    sqlite::SqliteRow,
+};
 
 pub type ID = u32;
+pub type SqliteQuery<'a> = Query<'a, Sqlite, <sqlx::Sqlite as sqlx::Database>::Arguments<'a>>;
+pub type SqliteQueryAs<'a, T> =
+    QueryAs<'a, Sqlite, T, <sqlx::Sqlite as sqlx::Database>::Arguments<'a>>;
 
 // -- Traits -- //
 
-pub trait Insertable<DB: Database> {
-    fn insert<'a>(self) -> Query<'a, DB, <DB as Database>::Arguments<'a>>;
+pub trait SQLiteCompat<'a>: Sized + Send + Unpin + for<'r> FromRow<'r, SqliteRow> {
+    const TABLE_NAME: &'static str;
+
+    /// Inserts `self`` into the table.
+    fn insert(self) -> SqliteQuery<'a>;
 }
 
 // -- Structures -- //
 
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "songs")]
 pub struct Song {
     pub id: ID,
 
@@ -41,31 +53,8 @@ pub struct Song {
     pub review: Option<String>,
 }
 
-impl Insertable<Sqlite> for Song {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO songs 
-                (
-                    title, collection, artist, cover_of,
-                    released, duration, description, rating,
-                    review
-                )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        "#,
-        )
-        .bind(self.title)
-        .bind(self.collection)
-        .bind(self.artist)
-        .bind(self.cover_of)
-        .bind(self.duration)
-        .bind(self.description)
-        .bind(self.rating)
-        .bind(self.review)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "collections")]
 pub struct Collection {
     pub id: ID,
 
@@ -77,23 +66,8 @@ pub struct Collection {
     pub artist: ID,
 }
 
-impl Insertable<Sqlite> for Collection {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO collections 
-                (title, description, released, artist)
-            VALUES ($1, $2, $3, $4)
-        "#,
-        )
-        .bind(self.title)
-        .bind(self.description)
-        .bind(self.released)
-        .bind(self.artist)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "artists")]
 pub struct Artist {
     pub id: ID,
 
@@ -106,24 +80,8 @@ pub struct Artist {
     pub year_ended: Option<DateTime<Utc>>,
 }
 
-impl Insertable<Sqlite> for Artist {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO artists 
-                (name, description, location, year_founded, year_ended)
-            VALUES ($1, $2, $3, $4, $5)
-        "#,
-        )
-        .bind(self.name)
-        .bind(self.description)
-        .bind(self.location)
-        .bind(self.year_founded)
-        .bind(self.year_ended)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "people")]
 pub struct Person {
     pub id: ID,
 
@@ -137,25 +95,8 @@ pub struct Person {
     pub deathplace: Option<String>,
 }
 
-impl Insertable<Sqlite> for Person {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO artists 
-                (name, description, birth, birthplace, death, deathplace)
-            VALUES ($1, $2, $3, $4, $5, $6)
-        "#,
-        )
-        .bind(self.name)
-        .bind(self.description)
-        .bind(self.birth)
-        .bind(self.birthplace)
-        .bind(self.death)
-        .bind(self.deathplace)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "tags")]
 pub struct Tag {
     pub id: ID,
 
@@ -163,23 +104,10 @@ pub struct Tag {
     pub description: Option<String>,
 }
 
-impl Insertable<Sqlite> for Tag {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO tags
-                (name, description)
-            VALUES ($1, $2)
-        "#,
-        )
-        .bind(self.name)
-        .bind(self.description)
-    }
-}
-
 // -- Relations -- //
 
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "persons_to_artists")]
 pub struct PersonToArtist {
     pub person_id: ID,
     pub artist_id: ID,
@@ -190,79 +118,23 @@ pub struct PersonToArtist {
     pub role: Option<String>,
 }
 
-impl Insertable<Sqlite> for PersonToArtist {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO persons_to_artists
-                (person_id, artist_id, time_start, time_end, role)
-            VALUES ($1, $2, $3, $4, $5)
-        "#,
-        )
-        .bind(self.person_id)
-        .bind(self.artist_id)
-        .bind(self.time_start)
-        .bind(self.time_end)
-        .bind(self.role)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "songs_to_tags")]
 pub struct SongToTag {
     pub song_id: ID,
     pub tag_id: ID,
 }
 
-impl Insertable<Sqlite> for SongToTag {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO songs_to_tags
-                (song_id, tag_id)
-            VALUES ($1, $2)
-        "#,
-        )
-        .bind(self.song_id)
-        .bind(self.tag_id)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "artists_to_tags")]
 pub struct ArtistToTag {
     pub artist_id: ID,
     pub tag_id: ID,
 }
 
-impl Insertable<Sqlite> for ArtistToTag {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO songs_to_tags
-                (artist_id, tag_id)
-            VALUES ($1, $2)
-        "#,
-        )
-        .bind(self.artist_id)
-        .bind(self.tag_id)
-    }
-}
-
-#[derive(Debug, Default, sqlx::FromRow)]
+#[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
+#[sqlite_compat(table_name = "tags_to_parent_tags")]
 pub struct TagToParentTag {
     pub tag_id: ID,
     pub parent_id: ID,
-}
-
-impl Insertable<Sqlite> for TagToParentTag {
-    fn insert<'a>(self) -> Query<'a, Sqlite, <Sqlite as Database>::Arguments<'a>> {
-        sqlx::query(
-            r#"
-            INSERT INTO tags_to_parent_tags
-                (tag_id, parent_id)
-            VALUES ($1, $2)
-        "#,
-        )
-        .bind(self.tag_id)
-        .bind(self.parent_id)
-    }
 }

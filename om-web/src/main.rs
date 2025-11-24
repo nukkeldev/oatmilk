@@ -31,7 +31,27 @@ async fn main() {
 
     let db = Db::new_in_memory()
         .await
-        .expect("Failed to connect to IN MEMORY database...");
+        .expect("Failed to connect to IN-MEMORY database...");
+
+    let artist = db
+        .add(Artist {
+            name: "Aquilus".to_string(),
+            description: Some("Solo Orchestral Atmospheric Black Metal Project".to_string()),
+            location: Some("Australia".to_string()),
+            ..Default::default()
+        })
+        .await
+        .unwrap() as u32;
+
+    let song = db
+        .add(Song {
+            title: "Nihil".to_string(),
+            artist: artist,
+            ..Default::default()
+        })
+        .await
+        .unwrap();
+
     let state = AppState { db: Arc::new(db) };
 
     let app = Router::new()
@@ -44,6 +64,8 @@ async fn main() {
     info!("Listening on {}...", listener.local_addr().unwrap());
 
     axum::serve(listener, app).await.unwrap();
+
+    // TODO: Disconnect from the DB.
 }
 
 async fn index_handler() -> Result<impl IntoResponse, AppError> {
@@ -54,35 +76,29 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
 
 #[derive(Template)]
 #[template(path = "table.html")]
-struct Table {
-    songs: Vec<Song>,
+struct Table<'a> {
+    songs: Vec<IndexSongView<'a>>,
 }
 
-struct Song {
-    title: String,
-    album: Album,
-    author: String,
-}
-
-#[derive(Debug, displaydoc::Display)]
-enum Album {
-    /// None
-    None,
-    /// Pointer to {0}
-    Ptr(usize),
+#[derive(Debug)]
+struct IndexSongView<'a> {
+    title: &'a str,
+    collection: Option<ID>,
+    artist: ID,
 }
 
 async fn table_handler(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
-    let mut table = Table { songs: vec![] };
+    let songs = state.db.get_all::<Song>().await.unwrap();
+    let show_songs = songs
+        .iter()
+        .map(|s| IndexSongView {
+            title: &s.title,
+            collection: s.collection,
+            artist: s.artist,
+        })
+        .collect::<Vec<IndexSongView<'_>>>();
 
-    for _ in 0..100 {
-        table.songs.push(Song {
-            title: "Hello".to_string(),
-            album: Album::Ptr(123),
-            author: "John".to_string(),
-        });
-    }
-
+    let table = Table { songs: show_songs };
     Ok(Html(table.render()?))
 }
 

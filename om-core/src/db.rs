@@ -1,6 +1,7 @@
 //! This module facilitates interactions with the underlying SQLite database.
 
-use sqlx::{Pool, migrate::MigrateDatabase, sqlite::*};
+use const_format::concatcp;
+use sqlx::{FromRow, Pool, migrate::MigrateDatabase, sqlite::*};
 
 use crate::media::*;
 
@@ -20,22 +21,18 @@ impl Db {
         }
 
         let pool = SqlitePoolOptions::new().connect(url).await?;
+        sqlx::query(include_str!("../migrations/20251123060115_init.sql"))
+            .execute(&pool)
+            .await?;
+
         Ok(Db { pool })
     }
 
-    pub async fn try_setup(&mut self) -> Result<(), sqlx::Error> {
-        sqlx::query(include_str!("../migrations/20251123060115_init.sql"))
-            .execute(&self.pool)
-            .await?;
-
-        Ok(())
-    }
-
-    pub async fn disconnect(&mut self) {
+    pub async fn disconnect(&self) {
         self.pool.close().await
     }
 
-    pub async fn add<T: Insertable<Sqlite>>(&mut self, entity: T) -> Result<i64, sqlx::Error> {
+    pub async fn add<'a, T: SQLiteCompat<'a>>(&self, entity: T) -> Result<i64, sqlx::Error> {
         let id = entity
             .insert()
             .execute(&self.pool)
@@ -44,37 +41,29 @@ impl Db {
         Ok(id)
     }
 
-    pub async fn get_songs(&mut self) -> Result<Vec<Song>, sqlx::Error> {
-        sqlx::query_as::<_, Song>(
-            r#"
-            SELECT * FROM songs;
-        "#,
-        )
-        .fetch_all(&self.pool)
-        .await
+    pub async fn get_all<'a, T: SQLiteCompat<'a>>(&self) -> Result<Vec<T>, sqlx::Error> {
+        self.get("").await
     }
 
-    pub async fn get_artists(&mut self) -> Result<Vec<Artist>, sqlx::Error> {
-        sqlx::query_as::<_, Artist>(
-            r#"
-            SELECT * FROM artists;
-        "#,
-        )
-        .fetch_all(&self.pool)
-        .await
+    pub async fn get<'a, T: SQLiteCompat<'a>>(
+        &self,
+        trailing: &str,
+    ) -> Result<Vec<T>, sqlx::Error> {
+        let query = format!("SELECT * FROM {} {}", T::TABLE_NAME, trailing);
+        sqlx::query_as(&query)
+            .bind(T::TABLE_NAME)
+            .fetch_all(&self.pool)
+            .await
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::path::Path;
-
     use crate::{db::Db, media::*};
 
     #[tokio::test]
     async fn use_memory_db() {
-        let mut db = Db::new_in_memory().await.unwrap();
-        db.try_setup().await.unwrap();
+        let db = Db::new_in_memory().await.unwrap();
 
         let artist = db
             .add(Artist {
@@ -95,9 +84,9 @@ mod tests {
             .await
             .unwrap();
 
-        let songs = db.get_songs().await.unwrap();
+        let songs = db.get_all::<Song>().await.unwrap();
         println!("Current songs: {:?}", songs);
-        let artists = db.get_artists().await.unwrap();
+        let artists = db.get_all::<Artist>().await.unwrap();
         println!("Current artists: {:?}", artists);
 
         db.disconnect().await;
@@ -105,8 +94,7 @@ mod tests {
 
     #[tokio::test]
     async fn use_file_db() {
-        let mut db = Db::new_at_url("sqlite:test.db").await.unwrap();
-        db.try_setup().await.unwrap();
+        let db = Db::new_at_url("sqlite:test.db").await.unwrap();
 
         let artist = db
             .add(Artist {
@@ -127,9 +115,9 @@ mod tests {
             .await
             .unwrap();
 
-        let songs = db.get_songs().await.unwrap();
+        let songs = db.get_all::<Song>().await.unwrap();
         println!("Current songs: {:?}", songs);
-        let artists = db.get_artists().await.unwrap();
+        let artists = db.get_all::<Artist>().await.unwrap();
         println!("Current artists: {:?}", artists);
 
         db.disconnect().await;

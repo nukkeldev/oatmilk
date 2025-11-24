@@ -1,6 +1,7 @@
 // Compiled with: https://github.com/dvanderweele/DBML_SQLite
 // See `src/media.rs` for documentation.
 
+// TODO: Multiple artists.
 Table songs {
   id integer [pk, increment, not null]
 

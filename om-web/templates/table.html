@@ -1,16 +1,16 @@
 <thead>
     <tr>
         <th>Title</th>
-        <th>Album</th>
-        <th>Author</th>
+        <th>Collection</th>
+        <th>Artist</th>
     </tr>
 </thead>
 <tbody>
     {% for song in songs %}
     <tr>
         <td>{{ song.title }}</td>
-        <td>{{ song.album }}</td>
-        <td>{{ song.author }}</td>
+        <td>{{ "{:?}" | format(song.collection) }}</td>
+        <td>{{ song.artist }}</td>
     </tr>
     {% endfor %}
 </tbody>

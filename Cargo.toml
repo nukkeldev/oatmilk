@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["om-core", "om-web"]
+members = ["om-core", "om-core-proc", "om-web"]
 
 [workspace.dependencies]
 log = "0.4.28"
