@@ -9,7 +9,7 @@ use axum::{
     routing::get,
 };
 use log::info;
-use tokio::net::TcpListener;
+use tokio::{net::TcpListener, signal};
 use tower_http::services::ServeDir;
 
 use om_core::db::Db;
@@ -29,9 +29,9 @@ async fn main() {
     // Initialize the logging implementation.
     pretty_env_logger::init_timed();
 
-    let db = Db::new_in_memory()
+    let db = Db::new_at_url("sqlite:oatmilk.db")
         .await
-        .expect("Failed to connect to IN-MEMORY database...");
+        .expect("Failed to connect to database...");
 
     let artist = db
         .add(Artist {
@@ -52,20 +52,26 @@ async fn main() {
         .await
         .unwrap();
 
-    let state = AppState { db: Arc::new(db) };
+    let state = Arc::new(AppState { db: Arc::new(db) });
 
     let app = Router::new()
         .route("/", get(index_handler))
         .route("/table", get(table_handler))
         .nest_service("/assets", ServeDir::new("build/assets/"))
-        .with_state(state);
+        .with_state(state.clone());
 
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
     info!("Listening on {}...", listener.local_addr().unwrap());
 
-    axum::serve(listener, app).await.unwrap();
+    let server = axum::serve(listener, app);
 
-    // TODO: Disconnect from the DB.
+    tokio::select! {
+        _ = server => {},
+        _ = shutdown_signal() => {
+            state.db.disconnect().await;
+            println!("Shutting down...");
+        }
+    }
 }
 
 async fn index_handler() -> Result<impl IntoResponse, AppError> {
@@ -87,7 +93,7 @@ struct IndexSongView<'a> {
     artist: ID,
 }
 
-async fn table_handler(State(state): State<AppState>) -> Result<impl IntoResponse, AppError> {
+async fn table_handler(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, AppError> {
     let songs = state.db.get_all::<Song>().await.unwrap();
     let show_songs = songs
         .iter()
@@ -117,4 +123,10 @@ impl IntoResponse for AppError {
         };
         (status, "Something went wrong").into_response()
     }
+}
+
+async fn shutdown_signal() {
+    signal::ctrl_c()
+        .await
+        .expect("failed to install CTRL+C handler");
 }
