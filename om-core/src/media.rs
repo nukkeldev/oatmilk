@@ -30,8 +30,8 @@ pub trait SQLiteCompat<'a>: Sized + Send + Unpin + for<'r> FromRow<'r, SqliteRow
 // -- Structures -- //
 
 #[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
-#[sqlite_compat(table_name = "songs")]
-pub struct Song {
+#[sqlite_compat(table_name = "tracks")]
+pub struct Track {
     pub id: ID,
 
     pub title: String,
@@ -47,7 +47,7 @@ pub struct Song {
     pub description: Option<String>,
 
     // TODO: Define strict rating system.
-    /// A composite, subjective rating for the song.
+    /// A composite, subjective rating for the track.
     /// Possibly further elaborated by the `review`.
     pub rating: Option<f32>,
     pub review: Option<String>,
@@ -119,9 +119,9 @@ pub struct PersonToArtist {
 }
 
 #[derive(Debug, Default, sqlx::FromRow, SQLiteCompat)]
-#[sqlite_compat(table_name = "songs_to_tags")]
-pub struct SongToTag {
-    pub song_id: ID,
+#[sqlite_compat(table_name = "tracks_to_tags")]
+pub struct TrackToTag {
+    pub track_id: ID,
     pub tag_id: ID,
 }
 

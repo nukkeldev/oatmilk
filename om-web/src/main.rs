@@ -43,8 +43,8 @@ async fn main() {
         .await
         .unwrap() as u32;
 
-    let song = db
-        .add(Song {
+    let track = db
+        .add(Track {
             title: "Nihil".to_string(),
             artist: artist,
             ..Default::default()
@@ -83,28 +83,30 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
 #[derive(Template)]
 #[template(path = "table.html")]
 struct Table<'a> {
-    songs: Vec<IndexSongView<'a>>,
+    tracks: Vec<IndexTrackView<'a>>,
 }
 
 #[derive(Debug)]
-struct IndexSongView<'a> {
+struct IndexTrackView<'a> {
     title: &'a str,
     collection: Option<ID>,
     artist: ID,
 }
 
 async fn table_handler(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, AppError> {
-    let songs = state.db.get_all::<Song>().await.unwrap();
-    let show_songs = songs
+    let tracks = state.db.get_all::<Track>().await.unwrap();
+    let show_tracks = tracks
         .iter()
-        .map(|s| IndexSongView {
+        .map(|s| IndexTrackView {
             title: &s.title,
             collection: s.collection,
             artist: s.artist,
         })
-        .collect::<Vec<IndexSongView<'_>>>();
+        .collect::<Vec<IndexTrackView<'_>>>();
 
-    let table = Table { songs: show_songs };
+    let table = Table {
+        tracks: show_tracks,
+    };
     Ok(Html(table.render()?))
 }
 

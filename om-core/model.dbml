@@ -2,14 +2,14 @@
 // See `src/media.rs` for documentation.
 
 // TODO: Multiple artists.
-Table songs {
+Table tracks {
   id integer [pk, increment, not null]
 
   title text [not null]
   collection integer [null, ref: > collections.id]
-  artist integer [ref: > artists.id]
+  artist integer [not null, ref: > artists.id]
 
-  cover_of integer [null, ref: > songs.id]
+  cover_of integer [null, ref: > tracks.id]
 
   released integer [null]
 
@@ -66,8 +66,8 @@ Table people {
   deathplace text [null]
 }
 
-Table songs_to_tags {
-  song_id integer [not null, ref: > songs.id]
+Table tracks_to_tags {
+  track_id integer [not null, ref: > tracks.id]
   tag_id integer [not null, ref: > tags.id]
 }
 
@@ -81,7 +81,7 @@ Table tags_to_parent_tags {
   parent_id integer [not null, ref: > tags.id]
 }
 
-// TODO: Should the same tags be able to apply to both songs and artists?
+// TODO: Should the same tags be able to apply to both tracks and artists?
 Table tags {
   id integer [pk, increment, not null]
 

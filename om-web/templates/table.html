@@ -6,11 +6,11 @@
     </tr>
 </thead>
 <tbody>
-    {% for song in songs %}
+    {% for track in tracks %}
     <tr>
-        <td>{{ song.title }}</td>
-        <td>{{ "{:?}" | format(song.collection) }}</td>
-        <td>{{ song.artist }}</td>
+        <td>{{ track.title }}</td>
+        <td>{{ "{:?}" | format(track.collection) }}</td>
+        <td>{{ track.artist }}</td>
     </tr>
     {% endfor %}
 </tbody>

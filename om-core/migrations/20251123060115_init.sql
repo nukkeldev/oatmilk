@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS songs (
+CREATE TABLE IF NOT EXISTS tracks (
   id INTEGER PRIMARY KEY NOT NULL,
   title TEXT NOT NULL,
   collection INTEGER,
@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS songs (
   review TEXT,
   FOREIGN KEY(collection) REFERENCES collections(id),
   FOREIGN KEY(artist) REFERENCES artists(id),
-  FOREIGN KEY(cover_of) REFERENCES songs(id)
+  FOREIGN KEY(cover_of) REFERENCES tracks(id)
 );
 CREATE TABLE IF NOT EXISTS collections (
   id INTEGER PRIMARY KEY NOT NULL,
@@ -47,10 +47,10 @@ CREATE TABLE IF NOT EXISTS people (
   death INTEGER,
   deathplace TEXT
 );
-CREATE TABLE IF NOT EXISTS songs_to_tags (
-  song_id INTEGER NOT NULL,
+CREATE TABLE IF NOT EXISTS tracks_to_tags (
+  track_id INTEGER NOT NULL,
   tag_id INTEGER NOT NULL,
-  FOREIGN KEY(song_id) REFERENCES songs(id),
+  FOREIGN KEY(track_id) REFERENCES tracks(id),
   FOREIGN KEY(tag_id) REFERENCES tags(id)
 );
 CREATE TABLE IF NOT EXISTS artists_to_tags (

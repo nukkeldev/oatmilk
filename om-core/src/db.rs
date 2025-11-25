@@ -75,8 +75,8 @@ mod tests {
             .await
             .unwrap() as u32;
 
-        let song = db
-            .add(Song {
+        let track = db
+            .add(Track {
                 title: "Nihil".to_string(),
                 artist: artist,
                 ..Default::default()
@@ -84,8 +84,8 @@ mod tests {
             .await
             .unwrap();
 
-        let songs = db.get_all::<Song>().await.unwrap();
-        println!("Current songs: {:?}", songs);
+        let tracks = db.get_all::<Track>().await.unwrap();
+        println!("Current tracks: {:?}", tracks);
         let artists = db.get_all::<Artist>().await.unwrap();
         println!("Current artists: {:?}", artists);
 
@@ -106,8 +106,8 @@ mod tests {
             .await
             .unwrap() as u32;
 
-        let song = db
-            .add(Song {
+        let track = db
+            .add(Track {
                 title: "Nihil".to_string(),
                 artist: artist,
                 ..Default::default()
@@ -115,8 +115,8 @@ mod tests {
             .await
             .unwrap();
 
-        let songs = db.get_all::<Song>().await.unwrap();
-        println!("Current songs: {:?}", songs);
+        let tracks = db.get_all::<Track>().await.unwrap();
+        println!("Current tracks: {:?}", tracks);
         let artists = db.get_all::<Artist>().await.unwrap();
         println!("Current artists: {:?}", artists);
 
