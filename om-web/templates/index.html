@@ -1,13 +1,20 @@
 {% extends "base.html" %}
 
 {% block head %}
-<link rel="stylesheet" href="/assets/index.css">
+<link rel="stylesheet" href="/assets/styles/index.css">
 {% endblock %}
 
 {% block content %}
-<div id="sidebar">Sidebar</div>
+<div id="sidebar">
+    <span class="button material-symbols-outlined">home</span>
+    <span class="button material-symbols-outlined">add</span>
+    <div class="vspacer"></div>
+    {% include "logo.html" %}
+</div>
 <main id="main">
-    <table hx-trigger="load" hx-get="/table"></table>
+    <div id="search">
+        <input type="text" placeholder="Query media...">
+    </div>
+    <div id="results" hx-trigger="load" hx-get="/search"></div>
 </main>
-<nav id="nav">Nav</nav>
 {% endblock %}

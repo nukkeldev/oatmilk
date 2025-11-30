@@ -1,0 +1,111 @@
+@use "colors"
+@use "sass:color"
+
+$gap: 0.5em
+
+body
+    display: flex
+    flex-direction: row
+
+    flex-wrap: nowrap
+    padding: $gap
+    gap: $gap
+
+    > *
+        background-color: colors.$mantle
+        padding: $gap
+        border: 2px solid colors.$base
+        border-radius: $gap
+
+#sidebar
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
+
+    align-items: center
+    padding: 0.5em 1em
+
+    user-select: none
+
+.vspacer
+    height: 100%
+
+.logo
+    > embed
+        width: 100%
+        color: #f00
+
+#main
+    grid-area: main
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
+
+    align-items: center
+    gap: $gap
+    padding: $gap
+
+    min-height: 0
+    max-height: 100%
+
+    > #search
+        width: 100%
+        padding: $gap
+        background: colors.$crust
+        border-radius: $gap
+        > input
+            background: transparent
+            border: none
+            color: white
+            font-size: 1.1em
+            width: 100%
+
+    > #results
+        height: 100%
+        overflow: hidden
+        > #table
+            height: 100%
+            display: flex
+            flex-direction: column
+            flex: 1
+            border-radius: $gap
+            border-collapse: collapse
+
+            background: colors.$crust
+
+            thead
+                flex: 0 0 auto
+                display: table
+                width: 100%
+                table-layout: fixed
+                background-color: colors.$base
+                user-select: none
+
+            tbody
+                flex: 1 1 auto
+                display: block
+                width: 100%
+                overflow-y: scroll
+                overscroll-behavior-y: none
+
+            tbody tr
+                display: table
+                width: 100%
+                table-layout: fixed
+
+            tbody, td
+                border-right: 2px solid colors.$base
+
+            th, td
+                padding: 8px
+                text-align: center
+                width: 200px
+
+            tr:nth-child(even)
+                background-color: color.adjust(colors.$base, $lightness: -5%)
+
+            .col-id
+                width: 4em
+
+            .col-durations
+                width: 4em

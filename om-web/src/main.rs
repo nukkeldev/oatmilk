@@ -56,8 +56,8 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(index_handler))
-        .route("/table", get(table_handler))
-        .nest_service("/assets", ServeDir::new("build/assets/"))
+        .route("/search", get(search_handler))
+        .nest_service("/assets", ServeDir::new("build/"))
         .with_state(state.clone());
 
     let listener = TcpListener::bind("127.0.0.1:3000").await.unwrap();
@@ -81,33 +81,30 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
 // -- Table -- //
 
 #[derive(Template)]
-#[template(path = "table.html")]
-struct Table<'a> {
-    tracks: Vec<IndexTrackView<'a>>,
+#[template(path = "results.html")]
+struct Results {
+    tracks: Vec<Track>,
 }
 
-#[derive(Debug)]
-struct IndexTrackView<'a> {
-    title: &'a str,
-    collection: Option<ID>,
-    artist: ID,
-}
-
-async fn table_handler(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, AppError> {
+async fn search_handler(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, AppError> {
     let tracks = state.db.get_all::<Track>().await.unwrap();
-    let show_tracks = tracks
-        .iter()
-        .map(|s| IndexTrackView {
-            title: &s.title,
-            collection: s.collection,
-            artist: s.artist,
-        })
-        .collect::<Vec<IndexTrackView<'_>>>();
-
-    let table = Table {
-        tracks: show_tracks,
-    };
+    let table = Results { tracks };
     Ok(Html(table.render()?))
+}
+
+impl Results {
+    fn format_duration(&self, mut seconds: &Option<u32>) -> String {
+        if let Some(dur) = seconds.and_then(|s| chrono::Duration::new(s as i64, 0)) {
+            format!(
+                "{:02}:{:02}:{:02}",
+                dur.num_hours(),
+                dur.num_minutes() % 60,
+                dur.num_seconds() % 60
+            )
+        } else {
+            "--:--:--".to_string()
+        }
+    }
 }
 
 // -- Errors -- //

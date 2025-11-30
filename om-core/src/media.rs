@@ -43,7 +43,7 @@ pub struct Track {
 
     pub released: Option<DateTime<Utc>>,
 
-    pub duration: Option<f32>,
+    pub duration: Option<u32>,
     pub description: Option<String>,
 
     // TODO: Define strict rating system.
