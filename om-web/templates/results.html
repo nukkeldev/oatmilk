@@ -1,3 +1,5 @@
+{% match result %}
+{% when Ok with (response) %}
 <div id="info">
     Found {{ response.items.len() }} Tracks in {{ response.elapsed.as_millis() }} ms.
 </div>
@@ -26,3 +28,8 @@
         {% endfor %}
     </tbody>
 </table>
+{% when Err with (err) %}
+<div id="error">
+    Error: {{ err }}
+</div>
+{% endmatch %}

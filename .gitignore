@@ -2,3 +2,7 @@
 /build
 
 .env
+
+oatmilk.db
+oatmilk.db-shm
+oatmilk.db-wal

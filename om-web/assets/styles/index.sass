@@ -67,12 +67,13 @@ body
         overflow: hidden
         width: 100%
         > #table
+            border-radius: $gap
             height: 100%
             display: flex
             flex-direction: column
             flex: 1
-            border-radius: $gap
             border-collapse: collapse
+            overflow: hidden
 
             background: colors.$crust
 
@@ -97,6 +98,8 @@ body
                 table-layout: fixed
 
             tbody, td
+                border-collapse: collapse
+                border-left: 2px solid colors.$base
                 border-right: 2px solid colors.$base
 
             th, td
@@ -112,3 +115,6 @@ body
 
             .col-durations
                 width: 4em
+
+    #error
+        color: red

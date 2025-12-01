@@ -13,7 +13,7 @@ use serde::Deserialize;
 use tokio::{net::TcpListener, signal};
 use tower_http::services::ServeDir;
 
-use om_core::db::{Db, SearchResponse};
+use om_core::db::{Db, SearchResponse, SearchResult};
 use om_core::media::*;
 
 #[derive(Debug, Clone)]
@@ -84,7 +84,7 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
 #[derive(Template)]
 #[template(path = "results.html")]
 struct Results {
-    response: SearchResponse<Track>,
+    result: SearchResult<Track>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -97,18 +97,16 @@ async fn search_handler(
     Query(query): Query<IndexQuery>,
 ) -> Result<impl IntoResponse, AppError> {
     info!("Searching for '{}'", query.query);
-    let response = if query.query.is_empty() {
+    let result = if query.query.is_empty() {
         state.db.get_all::<Track>().await
     } else {
         state
             .db
             .get::<Track>(format!("WHERE {}", query.query).as_str())
             .await
-    }
-    // TODO: Proper error displaying
-    .unwrap();
+    };
 
-    let table = Results { response };
+    let table = Results { result };
     Ok(Html(table.render()?))
 }
 
