@@ -13,8 +13,9 @@
 </div>
 <main id="main">
     <div id="search">
-        <input type="text" placeholder="Query media...">
+        <input id="query" name="query" type="text" placeholder="Query media... literally just raw sql rn"
+            hx-get="/search" hx-trigger="load, input changed delay:500ms" hx-target="#results" hx-include="#query">
     </div>
-    <div id="results" hx-trigger="load" hx-get="/search"></div>
+    <div id="results"></div>
 </main>
 {% endblock %}

@@ -3,16 +3,17 @@ use std::sync::Arc;
 use askama::Template;
 use axum::{
     Router,
-    extract::State,
+    extract::{Query, State},
     http::StatusCode,
     response::{Html, IntoResponse, Response},
     routing::get,
 };
 use log::info;
+use serde::Deserialize;
 use tokio::{net::TcpListener, signal};
 use tower_http::services::ServeDir;
 
-use om_core::db::Db;
+use om_core::db::{Db, SearchResponse};
 use om_core::media::*;
 
 #[derive(Debug, Clone)]
@@ -83,12 +84,31 @@ async fn index_handler() -> Result<impl IntoResponse, AppError> {
 #[derive(Template)]
 #[template(path = "results.html")]
 struct Results {
-    tracks: Vec<Track>,
+    response: SearchResponse<Track>,
 }
 
-async fn search_handler(State(state): State<Arc<AppState>>) -> Result<impl IntoResponse, AppError> {
-    let tracks = state.db.get_all::<Track>().await.unwrap();
-    let table = Results { tracks };
+#[derive(Debug, Deserialize)]
+struct IndexQuery {
+    query: String,
+}
+
+async fn search_handler(
+    State(state): State<Arc<AppState>>,
+    Query(query): Query<IndexQuery>,
+) -> Result<impl IntoResponse, AppError> {
+    info!("Searching for '{}'", query.query);
+    let response = if query.query.is_empty() {
+        state.db.get_all::<Track>().await
+    } else {
+        state
+            .db
+            .get::<Track>(format!("WHERE {}", query.query).as_str())
+            .await
+    }
+    // TODO: Proper error displaying
+    .unwrap();
+
+    let table = Results { response };
     Ok(Html(table.render()?))
 }
 

@@ -1,13 +1,28 @@
 //! This module facilitates interactions with the underlying SQLite database.
 
-use const_format::concatcp;
-use sqlx::{FromRow, Pool, migrate::MigrateDatabase, sqlite::*};
+use std::time::{Duration, Instant};
+
+use sqlx::{Pool, migrate::MigrateDatabase, sqlite::*};
 
 use crate::media::*;
 
 #[derive(Debug)]
 pub struct Db {
     pool: Pool<Sqlite>,
+}
+
+pub type SearchResult<T> = Result<SearchResponse<T>, SearchError>;
+
+#[derive(Debug)]
+pub struct SearchResponse<T> {
+    pub elapsed: Duration,
+    pub items: Vec<T>,
+}
+
+#[derive(Debug, thiserror::Error)]
+pub enum SearchError {
+    #[error("SQLx error: {0}")]
+    SQLx(#[from] sqlx::Error),
 }
 
 impl Db {
@@ -41,19 +56,22 @@ impl Db {
         Ok(id)
     }
 
-    pub async fn get_all<'a, T: SQLiteCompat<'a>>(&self) -> Result<Vec<T>, sqlx::Error> {
+    pub async fn get_all<'a, T: SQLiteCompat<'a>>(&self) -> SearchResult<T> {
         self.get("").await
     }
 
-    pub async fn get<'a, T: SQLiteCompat<'a>>(
-        &self,
-        trailing: &str,
-    ) -> Result<Vec<T>, sqlx::Error> {
+    pub async fn get<'a, T: SQLiteCompat<'a>>(&self, trailing: &str) -> SearchResult<T> {
         let query = format!("SELECT * FROM {} {}", T::TABLE_NAME, trailing);
-        sqlx::query_as(&query)
+        let start = Instant::now();
+        let items = sqlx::query_as(&query)
             .bind(T::TABLE_NAME)
             .fetch_all(&self.pool)
-            .await
+            .await?;
+
+        Ok(SearchResponse {
+            items,
+            elapsed: start.elapsed(),
+        })
     }
 }
 

@@ -1083,6 +1083,7 @@ dependencies = [
  "log",
  "om-core",
  "pretty_env_logger",
+ "serde",
  "thiserror",
  "tokio",
  "tower",

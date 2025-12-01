@@ -1,5 +1,5 @@
 <div id="info">
-    Results: {{ tracks.len() }} Tracks
+    Found {{ response.items.len() }} Tracks in {{ response.elapsed.as_millis() }} ms.
 </div>
 <table id="table">
     <thead>
@@ -13,7 +13,7 @@
         </tr>
     </thead>
     <tbody>
-        {% for track in tracks %}
+        {% for track in response.items %}
         <tr>
             <td class="col-id">{{ track.id }}</td>
             <td class="col-title">{{ track.title }}</td>
