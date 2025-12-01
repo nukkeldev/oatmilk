@@ -22,9 +22,10 @@ pub type SqliteQueryAs<'a, T> =
 
 pub trait SQLiteCompat<'a>: Sized + Send + Unpin + for<'r> FromRow<'r, SqliteRow> {
     const TABLE_NAME: &'static str;
+    type New;
 
     /// Inserts `self`` into the table.
-    fn insert(self) -> SqliteQuery<'a>;
+    fn insert(new: Self::New) -> SqliteQuery<'a>;
 }
 
 // -- Structures -- //

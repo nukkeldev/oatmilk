@@ -1,0 +1,46 @@
+<link rel="stylesheet" href="/assets/styles/search.css" hx-swap-oob="true" id="page-css">
+
+<div id="search">
+    <input id="query" name="query" type="text" placeholder="Query media... literally just raw sql rn" hx-get="/search"
+        hx-trigger="input changed delay:500ms" hx-target="#main" hx-include="#query">
+    <script>
+        document.getElementById("query").value = "{{ format_query() | safe }}";
+    </script>
+</div>
+<div id="results">
+    {% match result %}
+    {% when Ok with (response) %}
+    <div id="info">
+        Found {{ response.items.len() }} Tracks in {{ response.elapsed.as_millis() }} ms.
+    </div>
+    <table id="table">
+        <thead>
+            <tr>
+                <th class="col-id">ID</th>
+                <th class="col-title">Title</th>
+                <th class="col-artist">Artist</th>
+                <th class="col-collections">Collection</th>
+                <th class="col-durations">Duration</th>
+                <th class="col-extra"></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for track in response.items %}
+            <tr>
+                <td class="col-id">{{ track.id }}</td>
+                <td class="col-title">{{ track.title }}</td>
+                <td class="col-artist">{{ track.artist }}</td>
+                <td class="col-collections">{{ "{:?}" | format(track.collection) }}</td>
+                <td class="col-durations">{{ format_duration(track.duration) }}
+                </td>
+                <td class="col-extra">TODO</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% when Err with (err) %}
+    <div id="error">
+        Error: {{ err }}
+    </div>
+    {% endmatch %}
+</div>

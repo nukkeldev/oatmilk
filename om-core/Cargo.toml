@@ -10,6 +10,8 @@ log.workspace = true
 displaydoc.workspace = true
 thiserror.workspace = true
 num_enum = "0.7.5"
-chrono = "0.4.42"
+chrono = { version = "0.4.42", features = ["serde"] }
 om-core-proc = { version = "0.1.0", path = "../om-core-proc" }
 const_format = "0.2.35"
+serde = "1.0.228"
+axum = { version = "0.8.7", features = ["macros"] }

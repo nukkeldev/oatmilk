@@ -11,13 +11,23 @@
     <link rel="stylesheet"
         href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=add,home" />
     <link rel="stylesheet" href="/assets/styles/base.css">
+    <link rel="stylesheet" id="page-css" {{ format_page_css() | safe }}>
 
-    <title>🥛OATMILK</title>
-    {% block head %}{% endblock %}
+    <script src="/assets/scripts/base.js" defer></script>
+
+    <title>OATMILK</title>
 </head>
 
 <body>
-    {% block content %}{% endblock %}
+    <div id="sidebar">
+        <span id="home" class="button material-symbols-outlined" hx-get="/search" hx-trigger="click" hx-target="#main"
+            hx-replace-url="true">home</span>
+        <span id="new" class="button material-symbols-outlined" hx-get="/new" hx-trigger="click" hx-target="#main"
+            hx-replace-url="true">add</span>
+        <div class="vspacer"></div>
+        {% include "logo.html" %}
+    </div>
+    <main id="main" hx-replace-url="true">{{ content | safe }}</main>
 </body>
 
 </html>

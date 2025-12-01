@@ -2,6 +2,7 @@ use std::{fs, path::Path, process::Command};
 
 fn main() {
     remove_dir_if_exists("build/");
+    copy_dir("assets/scripts/", "build/scripts/");
     copy_dir("assets/vector/", "build/vector/");
     copy_dir("assets/images/", "build/images/");
     copy_dir("assets/fonts/", "build/fonts/");

@@ -55,13 +55,28 @@ pub fn sqlite_compat_derive(input: TokenStream) -> TokenStream {
         field_indices.push(quote! { #index });
     }
 
+    let new_ident = syn::Ident::new(&format!("New{}", name), name.span());
+    let new_struct = {
+        let filtered_fields = fields.iter().skip(skip);
+
+        quote! {
+            #[derive(Debug, serde::Deserialize)]
+            pub struct #new_ident {
+                #(#filtered_fields),*
+            }
+        }
+    };
+
     let expanded = quote! {
+        #new_struct
+
         impl<'a> SQLiteCompat<'a> for #name {
+            type New = #new_ident;
             const TABLE_NAME: &'static str = #table_name;
 
-            fn insert(self) -> Query<'a, Sqlite, <sqlx::Sqlite as sqlx::Database>::Arguments<'a>> {
+            fn insert(new: Self::New) -> Query<'a, Sqlite, <sqlx::Sqlite as sqlx::Database>::Arguments<'a>> {
                 sqlx::query(concat!("INSERT INTO ", #table_name, "(", #( #commad_field_names ),*, ") VALUES (", #( #field_indices ),*, ")"))
-                    #( .bind(self.#field_names) )*
+                    #( .bind(new.#field_names) )*
             }
         }
     };

@@ -2,53 +2,8 @@
 @use "sass:color"
 
 $gap: 0.5em
-
-body
-    display: flex
-    flex-direction: row
-
-    flex-wrap: nowrap
-    padding: $gap
-    gap: $gap
-
-    > *
-        background-color: colors.$mantle
-        padding: $gap
-        border: 2px solid colors.$base
-        border-radius: $gap
-
-#sidebar
-    display: flex
-    flex-direction: column
-    flex-wrap: nowrap
-
-    align-items: center
-    padding: 0.5em 1em
-
-    user-select: none
-
-.vspacer
-    height: 100%
-
-.logo
-    > embed
-        width: 100%
-        color: #f00
-
 #main
-    grid-area: main
-    display: flex
-    flex-direction: column
-    flex-wrap: nowrap
-
     align-items: center
-    gap: $gap
-    padding: $gap
-
-    min-height: 0
-    max-height: 100%
-
-    width: 100%
 
     > #search
         width: 100%
@@ -64,16 +19,18 @@ body
 
     > #results
         height: 100%
-        overflow: hidden
         width: 100%
+        overflow: hidden
+        display: flex
+        flex-direction: column
+        flex: 1
         > #table
             border-radius: $gap
-            height: 100%
             display: flex
             flex-direction: column
             flex: 1
             border-collapse: collapse
-            overflow: hidden
+            overflow: scroll
 
             background: colors.$crust
 
@@ -111,10 +68,10 @@ body
                 background-color: color.adjust(colors.$base, $lightness: -5%)
 
             .col-id
-                width: 4em
+                max-width: 4em
 
             .col-durations
-                width: 4em
+                min-width: 4em
 
     #error
         color: red

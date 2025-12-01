@@ -1,0 +1,39 @@
+<link rel="stylesheet" href="/assets/styles/new.css" hx-swap-oob="true" id="page-css">
+
+<form id="new-track-form" hx-post="/new/track" hx-swap="beforeend" hx-replace-url="false">
+    New Track
+    <span>
+        <label for="title">Title:</label>
+        <input type="text" name="title" id="title" required>
+    </span>
+    <span>
+        <label for="artist">Artist ID:</label>
+        <input type="number" name="artist" id="artist" required>
+    </span>
+    <span>
+        <label for="collection">Collection ID:</label>
+        <input type="number" name="collection" id="collection">
+    </span>
+    <span>
+        <label for="duration">Duration:</label>
+        <input type="number" name="duration" id="duration">
+    </span>
+    <input type="submit" hx-disable="true">
+</form>
+
+<script>
+    document.body.addEventListener("htmx:beforeRequest", function (e) {
+        const form = e.target;
+
+        if (!(form instanceof HTMLFormElement)) return;
+        if (form.id !== "new-track-form") return;
+
+        const fd = e.detail.requestConfig.parameters;
+
+        for (const key of Object.keys(fd)) {
+            if (String(fd[key]).trim() === "") {
+                delete fd[key];
+            }
+        }
+    });
+</script>

@@ -6,6 +6,8 @@ use sqlx::{Pool, migrate::MigrateDatabase, sqlite::*};
 
 use crate::media::*;
 
+pub type SQLxError = sqlx::Error;
+
 #[derive(Debug)]
 pub struct Db {
     pool: Pool<Sqlite>,
@@ -47,9 +49,8 @@ impl Db {
         self.pool.close().await
     }
 
-    pub async fn add<'a, T: SQLiteCompat<'a>>(&self, entity: T) -> Result<i64, sqlx::Error> {
-        let id = entity
-            .insert()
+    pub async fn add<'a, T: SQLiteCompat<'a>>(&self, entity: T::New) -> Result<i64, sqlx::Error> {
+        let id = T::insert(entity)
             .execute(&self.pool)
             .await?
             .last_insert_rowid();

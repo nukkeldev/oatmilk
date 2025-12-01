@@ -1,6 +1,8 @@
 @use "colors"
 @use "sass:color"
 
+$gap: 0.5em
+
 @font-face
     font-family: "0xProto Nerd Font"
     src: url("/assets/fonts/0xProtoNerdFont-Regular.ttf") format("truetype")
@@ -49,6 +51,7 @@ html, body
     cursor: pointer
     color: colors.$lavender
     transition: 0.25s
+    text-decoration: none
 
     &:hover
         color: color.adjust(colors.$lavender, $lightness: 10%)
@@ -74,3 +77,47 @@ input, textarea
 
 input:focus, textarea:focus
     outline: none
+
+body
+    display: flex
+    flex-direction: row
+
+    flex-wrap: nowrap
+    padding: $gap
+    gap: $gap
+
+    > *
+        background-color: colors.$mantle
+        padding: $gap
+        border: 2px solid colors.$base
+        border-radius: $gap
+
+#sidebar
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
+
+    align-items: center
+    padding: 0.5em 1em
+
+    user-select: none
+
+.vspacer
+    height: 100%
+
+#main
+    grid-area: main
+    display: flex
+    flex-direction: column
+    flex-wrap: nowrap
+
+    gap: $gap
+    padding: $gap
+
+    min-height: 0
+    max-height: 100%
+
+    width: 100%
+    max-width: 100%
+
+    overflow: hidden
