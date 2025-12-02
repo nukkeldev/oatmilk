@@ -1,7 +1,15 @@
 <link rel="stylesheet" href="/assets/styles/new.css" hx-swap-oob="true" id="page-css">
 
-<form id="new-track-form" hx-post="/new/track" hx-swap="beforeend" hx-replace-url="false">
-    New Track
+<label for="variant">Type:</label>
+<select name="variant" id="variant" hx-target=" #main" hx-get="/new" hx-include="#variant" hx-trigger="input changed">
+    <option value="track" {{ is_variant_selected("track") }}>Track</option>
+    <option value="artist" {{ is_variant_selected("artist") }}>Artist</option>
+    <option value="collection" {{ is_variant_selected("collection") }}>Collection</option>
+</select>
+
+<form id="new-form" hx-post="/new/{{ variant }}" hx-swap="beforeend" hx-replace-url="false">
+    {% match variant.as_str() %}
+    {% when "track" %}
     <span>
         <label for="title">Title:</label>
         <input type="text" name="title" id="title" required>
@@ -15,10 +23,49 @@
         <input type="number" name="collection" id="collection">
     </span>
     <span>
+        <label for="cover_of">Cover Of (ID):</label>
+        <input type="number" name="cover_of" id="cover_of">
+    </span>
+    <span>
+        <label for="released">Release Date:</label>
+        <input type="date" name="released" id="released">
+    </span>
+    <span>
         <label for="duration">Duration:</label>
         <input type="number" name="duration" id="duration">
     </span>
-    <input type="submit" hx-disable="true">
+    <span>
+        <label for="description">Description:</label>
+        <textarea name="description" id="description"></textarea>
+    </span>
+    <!-- TODO Rating and Review -->
+    {% when "artist" %}
+    <span>
+        <label for="name">Name:</label>
+        <input type="text" name="name" id="name" required>
+    </span>
+    <span>
+        <label for="description">Description:</label>
+        <textarea name="description" id="description"></textarea>
+    </span>
+    <span>
+        <label for="location">Location:</label>
+        <input type="text" name="location" id="location">
+    </span>
+    <span>
+        <label for="year_founded">Founding Date:</label>
+        <input type="date" name="year_founded" id="year_founded">
+    </span>
+    <span>
+        <label for="year_ended">Breakup Date:</label>
+        <input type="date" name="year_ended" id="year_ended">
+    </span>
+    {% when "collection" %}
+
+    {% else %}
+    <span>Unknown Form Type: {{ variant }}</span>
+    {% endmatch %}
+    <input type="submit" hx-disable="true" form="new-form">
 </form>
 
 <script>
@@ -26,13 +73,26 @@
         const form = e.target;
 
         if (!(form instanceof HTMLFormElement)) return;
-        if (form.id !== "new-track-form") return;
+        if (form.id !== "new-form") return;
 
         const fd = e.detail.requestConfig.parameters;
 
         for (const key of Object.keys(fd)) {
-            if (String(fd[key]).trim() === "") {
+            const val = String(fd[key]).trim();
+            if (val === "") {
                 delete fd[key];
+                continue;
+            }
+
+            const el = form.elements[key];
+            if (!el) continue;
+
+            if (el.type === "date") {
+                // val is "YYYY-MM-DD"
+                const [y, m, d] = val.split("-").map(Number);
+                // Construct UTC midnight and convert to ISO 8601
+                const iso = new Date(Date.UTC(y, m - 1, d)).toISOString();
+                fd[key] = iso;
             }
         }
     });

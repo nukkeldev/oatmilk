@@ -13,7 +13,7 @@ Table tracks {
 
   released integer [null]
 
-  duration float [null]
+  duration integer [null]
   description text [null]
 
   rating float [null]

@@ -37,8 +37,8 @@ pub struct Track {
 
     pub title: String,
 
-    pub collection: Option<ID>,
     pub artist: ID,
+    pub collection: Option<ID>,
 
     pub cover_of: Option<ID>,
 

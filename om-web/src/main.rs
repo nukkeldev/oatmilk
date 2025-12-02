@@ -150,12 +150,30 @@ impl Search {
 
 #[derive(Template)]
 #[template(path = "new.html")]
-struct New {}
+struct New {
+    variant: String,
+}
 
-async fn new_handler(headers: HeaderMap) -> Result<impl IntoResponse, AppError> {
+#[derive(Debug, Deserialize)]
+struct NewInput {
+    variant: Option<String>,
+}
+
+async fn new_handler(
+    headers: HeaderMap,
+    Form(input): Form<NewInput>,
+) -> Result<impl IntoResponse, AppError> {
     let fragment = is_htmx(headers);
 
-    let mut out = New {}.render()?;
+    let variant = if let Some(variant) = input.variant
+        && !variant.is_empty()
+    {
+        variant
+    } else {
+        "track".to_string()
+    };
+
+    let mut out = New { variant }.render()?;
     if !fragment {
         out = Based {
             content: out,
@@ -164,6 +182,16 @@ async fn new_handler(headers: HeaderMap) -> Result<impl IntoResponse, AppError> 
         .render()?;
     }
     Ok(Html(out))
+}
+
+impl New {
+    fn is_variant_selected(&self, target: &str) -> &str {
+        if self.variant.as_str() == target {
+            "selected"
+        } else {
+            ""
+        }
+    }
 }
 
 // -- New -- //
